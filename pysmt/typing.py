@@ -21,6 +21,7 @@ In the current version these are:
  * Bool
  * Int
  * Real
+ * FixedType
  * BVType
  * FunctionType
  * ArrayType
@@ -79,10 +80,14 @@ class PySMTType(object):
     def is_int_type(self):
         return False
 
-    def is_bv_type(self, width=None):
+    def is_fixed_type(self, sig_bits=None, man_bits=None):
         #pylint: disable=unused-argument
         return False
 
+    def is_bv_type(self, width=None):
+        #pylint: disable=unused-argument
+        return False
+    
     def is_array_type(self):
         return False
 
@@ -204,6 +209,58 @@ class _ArrayType(PySMTType):
 # EOC _ArrayType
 
 
+class _FixedType(PySMTType):
+    """Internal class to represent FixedType type.
+
+    This class should not be instantiated directly, but the factory
+    method FixedType should be used instead.
+    """
+    _instances = {}
+    
+    def __init__(self, sig_bits, man_bits):
+        width = sig_bits + man_bits + 1
+        decl = _TypeDecl("BV{%d}" % width, 0)
+        PySMTType.__init__(self, decl=decl, args=None)
+        self._sig_bits = sig_bits
+        self._man_bits = man_bits
+        self._width = width
+
+    @property
+    def width(self):
+        return self._width
+    
+    @property
+    def sig_bits(self):
+        return self._sig_bits
+
+    @property
+    def mab_bits(self):
+        return self._man_bits
+
+    def is_fixed_type(self, width=None):
+        if width:
+            return self.width == width
+        return True
+
+    def as_smtlib(self, funstyle=True):
+        if funstyle:
+            return "() (_ BitVec %d)" % self.width
+        else:
+            return "(_ BitVec %d)" % self.width
+
+    def __eq__(self, other):
+        if PySMTType.__eq__(self, other):
+            return True
+        if other is not None and other.is_fixed_type():
+            return (self.sig_bits == other.sig_bits and
+                    self.man_bits == other.man_bits)
+        return False
+
+    def __hash__(self):
+        return hash(self._sig_bits)^hash(self._man_bits)
+
+# EOC _FixedType
+    
 class _BVType(PySMTType):
     """Internal class to represent a BitVector type.
 
@@ -392,6 +449,7 @@ ARRAY_INT_INT = _ArrayType(INT,INT)
 class TypeManager(object):
 
     def __init__(self, environment):
+        self._fixed_types = {}
         self._bv_types = {}
         self._function_types = {}
         self._array_types = {}
@@ -426,6 +484,20 @@ class TypeManager(object):
 
     def STRING(self):
         return self._string
+
+    def FixedType(self, sig_bits, man_bits):
+        """Returns the singleton associated to the fixed type for the given width.
+
+        This function takes care of building and registering the type
+        whenever needed. To see the functions provided by the type look at
+        _FixedType.
+        """
+        try:
+            ty = self._fixed_types[(sig_bits, man_bits)]
+        except KeyError:
+            ty = _BVType(sig_bits=sig_bits, man_bits=man_bits)
+            self._bv_types[(sig_bits, man_bits)] = ty
+        return ty
 
     def BVType(self, width=32):
         """Returns the singleton associated to the BV type for the given width.
@@ -531,6 +603,8 @@ class TypeManager(object):
                 if (ty.is_bool_type() or ty.is_int_type() or
                     ty.is_real_type() or ty.is_string_type()):
                     myty = ty
+                elif ty.is_fixed_type():
+                    myty = self.FixedType(ty.sig_bits, ty.man_bits)
                 elif ty.is_bv_type():
                     myty = self.BVType(ty.width)
                 else:
@@ -573,6 +647,11 @@ def assert_are_types(targets, func_name):
         assert_is_type(target, func_name)
 
 
+def FixedType(sig_bits, man_bits):
+    """Returns the fixed point type for the given significand and mantissa
+    bits."""
+    mgr = pysmt.environment.get_env().type_manager
+    return mgr.FixedType(sig_bits=sigbits, man_bits=man_bits)
 
 def BVType(width=32):
     """Returns the BV type for the given width."""
