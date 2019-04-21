@@ -79,6 +79,31 @@ class SimpleTypeChecker(walkers.DagWalker):
             rval = self.walk_type_to_type(formula, args, INT, INT)
         return rval
 
+    @walkers.handles(op.FIXED_ADD, op.FIXED_SUB, op.FIXED_NEG, op.FIXED_MUL)
+    def walk_fixed_to_fixed(self, formula, args, **kwargs):
+        #pylint: disable=unused-argument
+        # We check that all children are Fixed and the same dimension
+        target_fixed_type = FixedType(formula.fixed_int_w(), formula.fixed_man_w())
+        for a in args:
+            if not a == target_fixed_type:
+                return None
+        return target_fixed_type
+
+    @walkers.handles(op.FIXED_LT, op.FIXED_LE)
+    def walk_fixed_comp(self, formula, args, **kwargs):
+        # We check that all children are Fixed and the same size
+        a,b = args
+        if a != b or (not a.is_fixed_type()):
+            return None
+        return BOOL
+
+    @walkers.handles(op.FIXED_CONSTANT)
+    def walk_identity_bv(self, formula, args, **kwargs):
+        #pylint: disable=unused-argument
+        assert formula is not None
+        assert len(args) == 0
+        return FixedType(formula.fixed_int_w(), formula.fixed_man_w())
+
     @walkers.handles(op.BV_ADD, op.BV_SUB, op.BV_NOT, op.BV_AND, op.BV_OR)
     @walkers.handles(op.BV_XOR, op.BV_NEG, op.BV_MUL)
     @walkers.handles(op.BV_UDIV, op.BV_UREM, op.BV_LSHL, op.BV_LSHR)

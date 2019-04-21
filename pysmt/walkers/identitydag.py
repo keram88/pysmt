@@ -106,6 +106,32 @@ class IdentityDagWalker(DagWalker):
     def walk_toreal(self, formula, args, **kwargs):
         return self.mgr.ToReal(args[0])
 
+    # Begin fixed point
+
+    def walk_fixed_constant(self, formula, **kwargs):
+        return self.mgr.Fixed(formula.constant_value(), formula.fixed_int_width(),
+        formula.fixed_man_width())
+
+    def walk_fixed_lt(self, formula, args, **kwargs):
+        return self.mgr.FixedLT(args[0], args[1])
+
+    def walk_fixed_le(self, formula, args, **kwargs):
+        return self.mgr.FixedLE(args[0], args[1])
+
+    def walk_fixed_neg(self, formula, args, **kwargs):
+        return self.mgr.FixedNeg(args[0])
+
+    def walk_fixed_add(self, formula, args, **kwargs):
+        return self.mgr.FixedAdd(args[0], args[1])
+
+    def walk_fixed_sub(self, formula, args, **kwargs):
+        return self.mgr.FixedSub(args[0], args[1])
+
+    def walk_fixed_mul(self, formula, args, **kwargs):
+        return self.mgr.FixedMul(args[0], args[1])
+
+    # End fixed point
+
     def walk_bv_constant(self, formula, **kwargs):
         return self.mgr.BV(formula.constant_value(), formula.bv_width())
 

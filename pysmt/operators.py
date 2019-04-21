@@ -25,7 +25,7 @@ from itertools import chain
 from six.moves import xrange
 
 
-ALL_TYPES = list(xrange(0,66))
+ALL_TYPES = list(xrange(0,73))
 
 (
 FORALL, EXISTS, AND, OR, NOT, IMPLIES, IFF, # Boolean Logic (0-6)
@@ -37,6 +37,15 @@ ITE,                                        # Term-ite (19)
 TOREAL,                                     # LIRA toreal() function (20)
 #
 # MG: FLOOR? INT_MOD_CONGR?
+#
+# Fixed point
+#
+FIXED_CONSTANT,                             # Fixed point constant
+FIXED_LT, FIXED_LE,                         # Fixed comparison
+FIXED_NEG, FIXED_ADD, FIXED_SUB,            # Basic arithmetic
+FIXED_MUL,                                  # Multiplication
+# FIXED_DIV,                                # Division
+# FIXED_EXT, FIXED_TRUNC,                   # Fixed extension/truncation
 #
 # BV
 BV_CONSTANT,                                # Bit-Vector constant (21)
@@ -88,19 +97,25 @@ BOOL_CONNECTIVES = frozenset([AND, OR, NOT, IMPLIES, IFF])
 BOOL_OPERATORS = frozenset(QUANTIFIERS | BOOL_CONNECTIVES)
 
 CONSTANTS = frozenset([BOOL_CONSTANT, REAL_CONSTANT, INT_CONSTANT,
-                       BV_CONSTANT, STR_CONSTANT, ALGEBRAIC_CONSTANT])
+                       BV_CONSTANT, STR_CONSTANT, ALGEBRAIC_CONSTANT,
+                       FIXED_CONSTANT])
 
 # Relations are predicates on theory atoms.
 # Relations have boolean type. They are a subset of the operators for a theory
+FIXED_RELATIONS = frozenset([FIXED_LT, FIXED_LE])
+
 BV_RELATIONS = frozenset([BV_ULE, BV_ULT, BV_SLT, BV_SLE])
 
 IRA_RELATIONS = frozenset([LE, LT])
 
 STR_RELATIONS = frozenset([STR_CONTAINS, STR_PREFIXOF, STR_SUFFIXOF])
 
-RELATIONS = frozenset((EQUALS,)) | BV_RELATIONS | IRA_RELATIONS | STR_RELATIONS
+RELATIONS = (frozenset((EQUALS,)) | BV_RELATIONS | IRA_RELATIONS | STR_RELATIONS
+             | FIXED_RELATIONS)
 
 # Operators are functions that return a Theory object
+FIXED_OPERATORS = frozenset([FIXED_NEG, FIXED_ADD, FIXED_SUB, FIXED_MUL])
+
 BV_OPERATORS = frozenset([BV_NOT, BV_AND, BV_OR, BV_XOR,
                           BV_CONCAT, BV_EXTRACT, BV_NEG, BV_ADD,
                           BV_SUB, BV_MUL, BV_UDIV, BV_UREM, BV_LSHL, BV_LSHR,
@@ -114,7 +129,8 @@ IRA_OPERATORS = frozenset([PLUS, MINUS, TIMES, TOREAL, DIV, POW, BV_TONATURAL])
 
 ARRAY_OPERATORS = frozenset([ARRAY_SELECT, ARRAY_STORE, ARRAY_VALUE])
 
-THEORY_OPERATORS = IRA_OPERATORS | BV_OPERATORS | ARRAY_OPERATORS | STR_OPERATORS
+THEORY_OPERATORS = (IRA_OPERATORS | BV_OPERATORS | ARRAY_OPERATORS
+                    | STR_OPERATORS | FIXED_OPERATORS)
 
 CUSTOM_NODE_TYPES = []
 
@@ -178,6 +194,13 @@ __OP_STR__ = {
     EQUALS : "EQUALS",
     ITE : "ITE",
     TOREAL : "TOREAL",
+    FIXED_CONSTANT : "FIXED_CONSTANT",
+    FIXED_LT : "FIXED_LT",
+    FIXED_LE : "FIXED_LE",
+    FIXED_NEG : "FIXED_NEG",
+    FIXED_ADD : "FIXED_ADD",
+    FIXED_SUB : "FIXED_SUB",
+    FIXED_MUL : "FIXED_MUL",
     BV_CONSTANT : "BV_CONSTANT",
     BV_NOT : "BV_NOT",
     BV_AND : "BV_AND",

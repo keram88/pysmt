@@ -79,6 +79,10 @@ class PySMTType(object):
     def is_int_type(self):
         return False
 
+    def is_fixed_type(self, width=None):
+        #pylint: disable=unused-argument
+        return False
+
     def is_bv_type(self, width=None):
         #pylint: disable=unused-argument
         return False
@@ -202,6 +206,60 @@ class _ArrayType(PySMTType):
         return True
 
 # EOC _ArrayType
+
+
+class _FixedType(PySMTType):
+    """Internal class to represent a fixedpoint type.
+
+    This class should not be instantiated directly, but the factory
+    method FixedType should be used instead.
+    """
+
+    _instances = {}
+
+    def __init__(self, int_w, man_w):
+        # 1 extra bit for sign
+        width = int_w + man_w + 1
+        decl = _TypeDecl("BV{%d}" % width, 0)
+        PySMTType.__init__(self, decl=decl, args=None)
+        self._int_w = int_w
+        self._man_w = man_w
+        self._width = width
+
+    @property
+    def width(self):
+        return self._width
+
+    @property
+    def man_w(self):
+        return self._man_w
+
+    @property
+    def int_w(self):
+        return self._int_w
+
+    def is_fixed_type(self, int_w = None, man_w = None):
+        if int_w and man_w:
+            return self.int_w == int_w and self.man_w == man_w
+        return True
+
+    def as_smtlib(self, funstyle=True):
+        if funstyle:
+            return "() (_ BitVec %d)" % self.width
+        else:
+            return "(_ BitVec %d)" % self.width
+
+    def __eq__(self, other):
+        if PySMTType.__eq__(self, other):
+            return True
+        if other is not None and other.is_fixed_type():
+            return self.int_w == other.int_w and self.man_w == other.man_w
+        return False
+
+    def __hash__(self):
+        return hash(self.int_w) ^ hash(self.man_w)
+
+# EOC _FixedType
 
 
 class _BVType(PySMTType):
@@ -392,6 +450,7 @@ ARRAY_INT_INT = _ArrayType(INT,INT)
 class TypeManager(object):
 
     def __init__(self, environment):
+        self._fixed_types = {}
         self._bv_types = {}
         self._function_types = {}
         self._array_types = {}
@@ -426,6 +485,21 @@ class TypeManager(object):
 
     def STRING(self):
         return self._string
+
+    def FixedType(self, int_w, man_w):
+        """Returns the singleton associated to the Fixed type for the given 
+        integer and mantissa widths.
+
+        This function takes care of building and registering the type
+        whenever needed. To see the functions provided by the type look at
+        _FixedType.
+        """
+        try:
+            ty = self._fixed_types[(int_w, man_w)]
+        except KeyError:
+            ty = _FixedType(int_w = int_w, man_w = man_w)
+            self._fixed_types[(int_w, man_w)] = ty
+        return ty
 
     def BVType(self, width=32):
         """Returns the singleton associated to the BV type for the given width.
@@ -531,6 +605,8 @@ class TypeManager(object):
                 if (ty.is_bool_type() or ty.is_int_type() or
                     ty.is_real_type() or ty.is_string_type()):
                     myty = ty
+                elif ty.is_fixed_type():
+                    myty = self.FixedType(ty.int_w, ty.man_w)
                 elif ty.is_bv_type():
                     myty = self.BVType(ty.width)
                 else:
@@ -573,6 +649,11 @@ def assert_are_types(targets, func_name):
         assert_is_type(target, func_name)
 
 
+
+def FixedType(int_w, man_w):
+    """Returns the BV type for the given width."""
+    mgr = pysmt.environment.get_env().type_manager
+    return mgr.FixedType(int_w, man_w)
 
 def BVType(width=32):
     """Returns the BV type for the given width."""

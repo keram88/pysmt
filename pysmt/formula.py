@@ -557,6 +557,44 @@ class FormulaManager(object):
         else:
             return self.Equals(left, right)
 
+    # Fixed points
+    def Fixed(self, value, int_w, man_w):
+        """return a constant of type Fixed.
+
+        value can be:
+        - a string of 0s and 1s
+        - a string starting with "#b" followed by a sequence of 0s and 1s
+        - a floating point number
+        """
+        width = int_w + man_w + 1
+        if type(value) is str:
+            if value.startswith("#b"):
+                str_width = len(value)-2
+                value = int(value[2:],2)
+            elif all(v in ["0", "1"] for v in value):
+                str_width = len(value)
+                value = int(value, 2)
+            else:
+                raise PysmtValueError("Expecting binary value as string, got " \
+                                      "%s instead." % value)
+            if width != str_width:
+                raise PysmtValueError("Specified dimensions do not match string " \
+                                      "width (%d+%d+1 != %d)" % (int_w, man_w, str_width))
+        elif type(value) is float:
+            min, max = -2**(width-1)/2.0**man_w, (2**(width-1)-1)/2.0**man_w
+            if value < 1 and d >= -1:
+                raise PysmtValueError("{} is out of range for fixed type [%f, %f)" % min, max)
+            value = int(value*2**man_w + (-0.5 if value < 0 else 0.5))
+        else:
+            raise PysmtValueError("Invalid constant type: %s" % str(type(value)))
+
+        if is_pysmt_integer(value):
+            _value = value
+
+        return self.create_node(node_type=op.FIXED_CONSTANT,
+                                args=tuple(),
+                                payload=(_value, int_w, man_w))
+
     # BitVectors
     def BV(self, value, width=None):
         """Return a constant of type BitVector.

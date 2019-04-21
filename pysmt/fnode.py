@@ -26,6 +26,10 @@ from pysmt.operators import (FORALL, EXISTS, AND, OR, NOT, IMPLIES, IFF,
                              LE, LT, EQUALS,
                              ITE,
                              TOREAL,
+                             FIXED_CONSTANT,
+                             FIXED_LT, FIXED_LE,
+                             FIXED_NEG, FIXED_ADD, FIXED_SUB,
+                             FIXED_MUL,
                              BV_CONSTANT, BV_NOT, BV_AND, BV_OR, BV_XOR,
                              BV_CONCAT, BV_EXTRACT,
                              BV_ULT, BV_ULE, BV_NEG, BV_ADD, BV_SUB,
@@ -46,12 +50,12 @@ from pysmt.operators import (FORALL, EXISTS, AND, OR, NOT, IMPLIES, IFF,
                              ARRAY_SELECT, ARRAY_STORE, ARRAY_VALUE,
                              ALGEBRAIC_CONSTANT)
 
-from pysmt.operators import  (BOOL_OPERATORS, THEORY_OPERATORS,
+from pysmt.operators import  (BOOL_OPERATORS, THEORY_OPERATORS, FIXED_OPERATORS,
                               BV_OPERATORS, IRA_OPERATORS, ARRAY_OPERATORS,
                               STR_OPERATORS,
                               RELATIONS, CONSTANTS)
 
-from pysmt.typing import BOOL, REAL, INT, BVType, STRING
+from pysmt.typing import BOOL, REAL, INT, FixedType, BVType, STRING
 from pysmt.decorators import deprecated, assert_infix_enabled
 from pysmt.utils import twos_complement
 from pysmt.constants import (Fraction, is_python_integer,
@@ -169,6 +173,11 @@ class FNode(object):
                 return False
             if _type.is_string_type() and self.node_type() != STR_CONSTANT:
                 return False
+            if _type.is_fixed_type():
+                if self.node_type() != FIXED_CONSTANT:
+                    return False
+                if self._content.payload[1] != _type.width: # FIXTHIS
+                    return False
             if _type.is_bv_type():
                 if self.node_type() != BV_CONSTANT:
                     return False
@@ -199,6 +208,20 @@ class FNode(object):
         Optionally, check that the constant has the given value.
         """
         return self.is_constant(INT, value)
+
+    def is_fixed_constant(self, value=None, int_w = None, man_w = None):
+        """Test whether the formula is a Fixed point constant.
+
+        Optionally, check that the constant has the given value.
+        """
+        if value is None and int_w is None and man_w is None:
+            return self.node_type() == FIXED_CONSTANT
+
+        if int_w is None and man_w is None:
+            return self.is_constant(value=value)
+        else:
+            return self.is_constant(_type=FixedType(int_w = int_w, man_w = man_w),
+                                    value=value)
 
     def is_bv_constant(self, value=None, width=None):
         """Test whether the formula is a BitVector constant.
@@ -343,7 +366,35 @@ class FNode(object):
     def is_lira_op(self):
         """Test whether the node is a IRA operator."""
         return self.node_type() in IRA_OPERATORS
+    # Begin Fixed
+    def is_fixed_op(self):
+        """Test whether the node is a Fixed point operator."""
+        return self.node_type() in FIXED_OPERATORS
 
+    def is_fixed_lt(self):
+        """Test whether the node is the FixedLT (less than) relation."""
+        return self.node_type() == FIXED_LT
+
+    def is_fixed_le(self):
+        """Test whether the node is the FixedLE (less than or equal) relation."""
+        return self.node_type() == FIXED_LE
+
+    def is_fixed_neg(self):
+        """Test whether the node is the FixedNeg operator."""
+        return self.node_type() == FIXED_NEG
+
+    def is_fixed_add(self):
+        """Test whether the node is the FixedAdd operator."""
+        return self.node_type() == FIXED_ADD
+
+    def is_fixed_sub(self):
+        """Test whether the node is the FixedAdd operator."""
+        return self.node_type() == FIXED_SUB
+
+    def is_fixed_mul(self):
+        """Test whether the node is the FixedMul operator."""
+        return self.node_type() == FIXED_MUL
+    # End Fixed
     def is_bv_op(self):
         """Test whether the node is a BitVector operator."""
         return self.node_type() in BV_OPERATORS
@@ -690,13 +741,15 @@ class FNode(object):
 
     # Infix Notation
     @assert_infix_enabled
-    def _apply_infix(self, right, function, bv_function=None):
+    def _apply_infix(self, right, function, bv_function=None, fixed_function=None):
         # Default bv_function to function
         if bv_function is None:
             bv_function = function
         right = self._infix_prepare_arg(right, self.get_type())
         if self.get_type().is_bv_type():
             return bv_function(self, right)
+        if self.get_type().is_fixed_type():
+            return fixed_function(self, right)
         return function(self, right)
 
     @assert_infix_enabled
@@ -705,6 +758,9 @@ class FNode(object):
         if isinstance(arg, FNode):
             return arg
 
+        # Fixed
+        if expected_type.is_fixed_type():
+            return mgr.Fixed(arg, int_w=expected_type.int_w, man_w=expected_type.man_w)
         # BVs
         if expected_type.is_bv_type():
             return mgr.BV(arg, width=expected_type.width)
