@@ -607,6 +607,30 @@ class FormulaManager(object):
     def FixedMin(self, int_w, man_w):
         return self.Fixed(-2**(int_w+man_w)/2.0**man_w, int_w, man_w)
 
+    def FixedNeg(self, formula):
+        """Returns the arithmetic negation of the Fixed number."""
+        return self.create_node(node_type=op.FIXED_NEG,
+                                args=(formula,),
+                                payload=(formula.fixed_int_w(), formula.fixed_man_w()))
+
+    def FixedAdd(self, left, right):
+        """Returns the sum of two Fixed numbers."""
+        return self.create_node(node_type=op.FIXED_ADD,
+                                args=(left, right),
+                                payload=(left.fixed_int_w(), left.fixed_man_w()))
+
+    def FixedSub(self, left, right):
+        """Returns the difference of two Fixed numbers."""
+        return self.create_node(node_type=op.FIXED_SUB,
+                                args=(left, right),
+                                payload=(left.fixed_int_w(), left.fixed_man_w()))
+
+    def FixedMul(self, left, right):
+        """Returns the product of two BV."""
+        return self.create_node(node_type=op.FIXED_MUL,
+                                args=(left, right),
+                                payload=(left.fixed_int_w(), left.fixed_man_w()))
+
     # BitVectors
     def BV(self, value, width=None):
         """Return a constant of type BitVector.

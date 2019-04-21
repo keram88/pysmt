@@ -367,6 +367,38 @@ class FNode(object):
         """Test whether the node is a IRA operator."""
         return self.node_type() in IRA_OPERATORS
     # Begin Fixed
+
+    def fixed_dimension(self):
+        """Return the Fixed width of the formula."""
+        if self.is_bv_constant():
+            return (self._content.payload[1], self._content.payload[2])
+        elif self.is_symbol():
+            assert self.symbol_type().is_fixed_type()
+            return (self.symbol_type().int_w, self.symbol_type().man_w)
+        elif self.is_function_application():
+            # Return width defined in the declaration
+            base = self.function_name().symbol_type().return_type
+            return (base.int_w, base.man_w)
+        elif self.is_ite():
+            # Recursively call bv_width on the left child
+            # (The right child has the same width if the node is well-formed)
+            width_l = self.arg(1).fixed_dimension()
+            return width_l
+        elif self.is_select():
+            # This must be a select over an array with BV value type
+            ty = self.arg(0).get_type()
+            return (ty.elem_type.int_w, ty.elem_type.man_w)
+        else:
+            # Fixed Operator
+            assert self.is_fixed_op(), "Unsupported method fixed_dimension on %s" % self
+            return self._content.payload
+
+    def fixed_int_w(self):
+        return self.fixed_dimension()[0]
+
+    def fixed_man_w(self):
+        return self.fixed_dimension()[1]
+
     def is_fixed_op(self):
         """Test whether the node is a Fixed point operator."""
         return self.node_type() in FIXED_OPERATORS
@@ -394,6 +426,7 @@ class FNode(object):
     def is_fixed_mul(self):
         """Test whether the node is the FixedMul operator."""
         return self.node_type() == FIXED_MUL
+
     # End Fixed
     def is_bv_op(self):
         """Test whether the node is a BitVector operator."""
@@ -910,7 +943,7 @@ class FNode(object):
     # Infix operators
     #
     def __add__(self, right):
-        return self._apply_infix(right, _mgr().Plus, _mgr().BVAdd)
+        return self._apply_infix(right, _mgr().Plus, _mgr().BVAdd, _mgr().FixedAdd)
 
     def __radd__(self, right):
         return self._apply_infix(right, _mgr().Plus, _mgr().BVAdd)
