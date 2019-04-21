@@ -582,7 +582,7 @@ class FormulaManager(object):
                                       "width (%d+%d+1 != %d)" % (int_w, man_w, str_width))
         elif type(value) is float:
             min, max = -2**(width-1)/2.0**man_w, (2**(width-1)-1)/2.0**man_w
-            if value < 1 and d >= -1:
+            if value < min or value > max:
                 raise PysmtValueError("{} is out of range for fixed type [%f, %f)" % min, max)
             value = int(value*2**man_w + (-0.5 if value < 0 else 0.5))
         else:
@@ -594,6 +594,18 @@ class FormulaManager(object):
         return self.create_node(node_type=op.FIXED_CONSTANT,
                                 args=tuple(),
                                 payload=(_value, int_w, man_w))
+
+    def FixedOne(self, int_w, man_w):
+        return self.Fixed(1.0, int_w, man_w)
+
+    def FixedZero(self, int_w, man_w):
+        return self.Fixed(0.0, int_w, man_w)
+
+    def FixedMax(self, int_w, man_w):
+        return self.Fixed((2**(int_w+man_w) - 1)/2.0**man_w, int_w, man_w)
+
+    def FixedMin(self, int_w, man_w):
+        return self.Fixed(-2**(int_w+man_w)/2.0**man_w, int_w, man_w)
 
     # BitVectors
     def BV(self, value, width=None):
