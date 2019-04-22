@@ -25,7 +25,7 @@ reasoning about the type of formulae.
 import pysmt.walkers as walkers
 import pysmt.operators as op
 
-from pysmt.typing import BOOL, REAL, INT, BVType, ArrayType, STRING
+from pysmt.typing import BOOL, REAL, INT, FixedType, BVType, ArrayType, STRING
 from pysmt.exceptions import PysmtTypeError
 
 

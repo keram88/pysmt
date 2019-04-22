@@ -55,7 +55,7 @@ from pysmt.operators import  (BOOL_OPERATORS, THEORY_OPERATORS, FIXED_OPERATORS,
                               STR_OPERATORS,
                               RELATIONS, CONSTANTS)
 
-from pysmt.typing import BOOL, REAL, INT, FixedType, BVType, STRING
+from pysmt.typing import BOOL, REAL, INT, FixedType, BVType,STRING
 from pysmt.decorators import deprecated, assert_infix_enabled
 from pysmt.utils import twos_complement
 from pysmt.constants import (Fraction, is_python_integer,
