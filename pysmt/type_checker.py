@@ -98,7 +98,7 @@ class SimpleTypeChecker(walkers.DagWalker):
         return BOOL
 
     @walkers.handles(op.FIXED_CONSTANT)
-    def walk_identity_bv(self, formula, args, **kwargs):
+    def walk_identity_fixed(self, formula, args, **kwargs):
         #pylint: disable=unused-argument
         assert formula is not None
         assert len(args) == 0

@@ -587,9 +587,14 @@ class FormulaManager(object):
             value = int(value*2**man_w + (-0.5 if value < 0 else 0.5))
         else:
             raise PysmtValueError("Invalid constant type: %s" % str(type(value)))
-
+        
         if is_pysmt_integer(value):
             _value = value
+        elif is_python_integer(value):
+            _value = pysmt_integer_from_integer(value)
+        else:
+            raise PysmtTypeError("Invalid type in constant. The type was: %s" \
+                                 % str(type(value)))
 
         return self.create_node(node_type=op.FIXED_CONSTANT,
                                 args=tuple(),

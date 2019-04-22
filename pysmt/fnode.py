@@ -370,7 +370,7 @@ class FNode(object):
 
     def fixed_dimension(self):
         """Return the Fixed width of the formula."""
-        if self.is_bv_constant():
+        if self.is_fixed_constant():
             return (self._content.payload[1], self._content.payload[2])
         elif self.is_symbol():
             assert self.symbol_type().is_fixed_type()

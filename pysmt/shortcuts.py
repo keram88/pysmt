@@ -40,8 +40,8 @@ import pysmt.smtlib.script
 import pysmt.smtlib.printers
 
 # Import types from shortcuts
-from pysmt.typing import INT, BOOL, REAL, BVType, FunctionType, ArrayType, Type
-assert INT or BOOL or REAL or BVType or FunctionType or ArrayType or Type
+from pysmt.typing import INT, BOOL, REAL, BVType, FunctionType, ArrayType, Type, FixedType
+assert INT or BOOL or REAL or BVType or FunctionType or ArrayType or Type or FixedType
 
 
 def get_env():
@@ -370,6 +370,20 @@ def EqualsOrIff(left, right):
     dealing with both Theory and Boolean atoms.
     """
     return get_env().formula_manager.EqualsOrIff(left, right)
+
+#
+# Fixed points
+#
+
+def FixedMin(int_w, man_w):
+    """Returns the unsigned one constant BitVector.
+
+    :param int_w: Specify integral bits.
+    :param man_w: Specify mantissa bits.
+    :returns: The minimum value for a fixed type with int_w, man_w bits.
+    :rtype: FNode
+    """
+    return get_env().formula_manager.FixedMin(int_w, man_w)
 
 
 #
