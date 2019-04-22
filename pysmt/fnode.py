@@ -946,12 +946,12 @@ class FNode(object):
         return self._apply_infix(right, _mgr().Plus, _mgr().BVAdd, _mgr().FixedAdd)
 
     def __radd__(self, right):
-        return self._apply_infix(right, _mgr().Plus, _mgr().BVAdd)
+        return self._apply_infix(right, _mgr().Plus, _mgr().BVAdd, _mgr().FixedAdd)
 
     def __sub__(self, right):
-        return self._apply_infix(right, _mgr().Minus, _mgr().BVSub)
+        return self._apply_infix(right, _mgr().Minus, _mgr().BVSub, _mgr().FixedSub)
 
-    def __rsub__(self, left):
+    def __rsub__(self, left): # FIXTHIS
         # Swap operators to perform right-subtract
         # For BVs we might need to build the BV constant
         if self.get_type().is_bv_type():
@@ -963,10 +963,10 @@ class FNode(object):
         return minus_self._apply_infix(left, _mgr().Plus)
 
     def __mul__(self, right):
-        return self._apply_infix(right, _mgr().Times, _mgr().BVMul)
+        return self._apply_infix(right, _mgr().Times, _mgr().BVMul, _mgr().FixedMul)
 
     def __rmul__(self, right):
-        return self._apply_infix(right, _mgr().Times, _mgr().BVMul)
+        return self._apply_infix(right, _mgr().Times, _mgr().BVMul, _mgr().FixedMul)
 
     def __div__(self, right):
         return self._apply_infix(right, _mgr().Div, _mgr().BVUDiv)
@@ -975,16 +975,16 @@ class FNode(object):
         return self.__div__(right)
 
     def __gt__(self, right):
-        return self._apply_infix(right, _mgr().GT, _mgr().BVUGT)
+        return self._apply_infix(right, _mgr().GT, _mgr().BVUGT, _mgr().FixedGT)
 
     def __ge__(self, right):
-        return self._apply_infix(right, _mgr().GE, _mgr().BVUGE)
+        return self._apply_infix(right, _mgr().GE, _mgr().BVUGE, _mgr().FixedGE)
 
     def __lt__(self, right):
-        return self._apply_infix(right, _mgr().LT, _mgr().BVULT)
+        return self._apply_infix(right, _mgr().LT, _mgr().BVULT, _mgr().FixedLT)
 
     def __le__(self, right):
-        return self._apply_infix(right, _mgr().LE, _mgr().BVULE)
+        return self._apply_infix(right, _mgr().LE, _mgr().BVULE, _mgr().FixedLE)
 
     def __and__(self, other):
         return self._apply_infix(other, _mgr().And, _mgr().BVAnd)
@@ -1007,6 +1007,8 @@ class FNode(object):
     def __neg__(self):
         if self.get_type().is_bv_type():
             return _mgr().BVNeg(self)
+        if self.get_type().is_fixed_type():
+            return _mgr().FixedNeg(self)
         return self._apply_infix(-1, _mgr().Times)
 
     @assert_infix_enabled

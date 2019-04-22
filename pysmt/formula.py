@@ -595,6 +595,16 @@ class FormulaManager(object):
                                 args=tuple(),
                                 payload=(_value, int_w, man_w))
 
+    def FixedLT(self, left, right):
+        """Returns the less than comparison for Fixed."""
+        return self.create_node(node_type=op.FIXED_LT,
+                                args=(left, right))
+
+    def FixedLE(self, left, right):
+        """Returns the less than or equal comparison for Fixed."""
+        return self.create_node(node_type=op.FIXED_LE,
+                                args=(left, right))
+
     def FixedOne(self, int_w, man_w):
         return self.Fixed(1.0, int_w, man_w)
 
@@ -626,10 +636,18 @@ class FormulaManager(object):
                                 payload=(left.fixed_int_w(), left.fixed_man_w()))
 
     def FixedMul(self, left, right):
-        """Returns the product of two BV."""
+        """Returns the product of two Fixed numbers."""
         return self.create_node(node_type=op.FIXED_MUL,
                                 args=(left, right),
                                 payload=(left.fixed_int_w(), left.fixed_man_w()))
+    def FixedGT(self, left, right):
+        """Returns the formula left > right."""
+        return self.create_node(node_type=op.FIXED_LT,
+                                args=(right, left))
+    def FixedGE(self, left, right):
+        """Returns the formula left > right."""
+        return self.create_node(node_type=op.FIXED_LE,
+                                args=(right, left))
 
     # BitVectors
     def BV(self, value, width=None):

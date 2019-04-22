@@ -109,6 +109,9 @@ class HRPrinter(TreeWalker):
         else:
             self.write("False")
 
+    def walk_fixed_constant(self, formula):
+        self.write("%d_%d.%d" % (formula.constant_value(), formula.fixed_int_w(),
+                                 formula.fixed_man_w()))
     def walk_bv_constant(self, formula):
         # This is the simplest SMT-LIB way of printing the value of a BV
         # self.write("(_ bv%d %d)" % (formula.bv_width(),
@@ -123,6 +126,11 @@ class HRPrinter(TreeWalker):
         yield formula.arg(0)
         self.write("[%d:%d]" % (formula.bv_extract_start(),
                                        formula.bv_extract_end()))
+
+    def walk_fixed_neg(self, formula):
+        self.write("(- ")
+        yield formula.arg(0)
+        self.write(")")
 
     def walk_bv_neg(self, formula):
         self.write("(- ")
@@ -316,12 +324,20 @@ class HRPrinter(TreeWalker):
     def walk_bv_lshr(self, formula): return self.walk_nary(formula, " >> ")
     def walk_bv_ashr(self, formula): return self.walk_nary(formula, " a>> ")
     def walk_bv_comp(self, formula): return self.walk_nary(formula, " bvcomp ")
+    # Fixed
+    def walk_fixed_le(self, formula): return self.walk_nary(formula, " fixed<= ")
+    def walk_fixed_lt(self, formula): return self.walk_nary(formula, " fixed< ")
+
     walk_bv_and = walk_and
     walk_bv_or = walk_or
     walk_bv_not = walk_not
     walk_bv_add = walk_plus
     walk_bv_mul = walk_times
     walk_bv_sub = walk_minus
+    # Fixed
+    walk_fixed_add = walk_plus
+    walk_fixed_mul = walk_times
+    walk_fixed_sub = walk_minus
 
 #EOC HRPrinter
 
