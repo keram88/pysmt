@@ -335,7 +335,7 @@ class HRPrinter(TreeWalker):
     walk_bv_mul = walk_times
     walk_bv_sub = walk_minus
     # Fixed
-    walk_fixed_add = walk_plus
+    # walk_fixed_add = walk_plus
     walk_fixed_mul = walk_times
     walk_fixed_sub = walk_minus
 

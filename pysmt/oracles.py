@@ -160,6 +160,8 @@ class TheoryOracle(walkers.DagWalker):
             pass
         elif ty.is_bv_type():
             theory.bit_vectors = True
+        elif ty.is_fixed_type():
+            theory.bit_vectors = True
         elif ty.is_array_type():
             theory.arrays = True
             theory = theory.combine(self._theory_from_type(ty.index_type))
@@ -176,6 +178,7 @@ class TheoryOracle(walkers.DagWalker):
     @walkers.handles(op.RELATIONS)
     @walkers.handles(op.BOOL_OPERATORS)
     @walkers.handles(op.BV_OPERATORS)
+    @walkers.handles(op.FIXED_OPERATORS)
     @walkers.handles(op.STR_OPERATORS -\
                      set([op.STR_LENGTH, op.STR_INDEXOF, op.STR_TO_INT]))
     @walkers.handles(op.ITE, op.ARRAY_SELECT, op.ARRAY_STORE, op.MINUS)
@@ -192,6 +195,7 @@ class TheoryOracle(walkers.DagWalker):
     @walkers.handles(op.REAL_CONSTANT, op.BOOL_CONSTANT)
     @walkers.handles(op.INT_CONSTANT, op.BV_CONSTANT)
     @walkers.handles(op.STR_CONSTANT)
+    @walkers.handles(op.FIXED_CONSTANT)
     def walk_constant(self, formula, args, **kwargs):
         """Returns a new theory object with the type of the constant."""
         #pylint: disable=unused-argument
@@ -203,6 +207,8 @@ class TheoryOracle(walkers.DagWalker):
             theory_out.integer_arithmetic = True
             theory_out.integer_difference = True
         elif formula.is_bv_constant():
+            theory_out.bit_vectors = True
+        elif formula.is_fixed_constant():
             theory_out.bit_vectors = True
         elif formula.is_string_constant():
             theory_out.strings = True

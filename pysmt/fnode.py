@@ -665,9 +665,15 @@ class FNode(object):
         elif self.node_type() == STR_CONSTANT:
             return STRING
         else:
-            assert self.node_type() == BV_CONSTANT,\
+            node_ty = self.node_type()
+            assert node_ty in (BV_CONSTANT, FIXED_CONSTANT), \
                 "Unsupported method constant_type '%s'" % self
-            return BVType(width=self.bv_width())
+            if node_ty == BV_CONSTANT:
+                return BVType(width=self.bv_width())
+            elif node_ty == FIXED_CONSTANT:
+                return FixedType(int_w=self.fixed_int_w(), man_w=self.fixed_man_w())
+            else:
+                assert False, "Implementation error"
 
     def bv2nat(self):
         """Return the unsigned value encoded by the BitVector."""

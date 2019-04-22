@@ -47,6 +47,8 @@ class SmtPrinter(TreeWalker):
             yield s
         self.write(")")
 
+    def walk_fixed_add(self, formula):
+        pass
     def walk_and(self, formula): return self.walk_nary(formula, "and")
     def walk_or(self, formula): return self.walk_nary(formula, "or")
     def walk_not(self, formula): return self.walk_nary(formula, "not")
