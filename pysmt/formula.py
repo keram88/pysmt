@@ -630,9 +630,14 @@ class FormulaManager(object):
 
     def FixedAdd(self, left, right):
         """Returns the sum of two Fixed numbers."""
-        return self.create_node(node_type=op.FIXED_ADD,
-                                args=(left, right),
-                                payload=(left.fixed_int_w(), left.fixed_man_w()))
+        int_w, man_w = left.fixed_dimension()
+        width = int_w + man_w
+        bv_width = width+1
+        temp = self.BVAdd(left, right)
+        return self.Ite(self.And(self.Equals(self.BVExtract(left, width), self.BVExtract(right, width)),
+                                 self.Not(self.Equals(self.BVExtract(left, width), self.BVExtract(temp, width)))),
+                        left,
+                        temp)
 
     def FixedSub(self, left, right):
         """Returns the difference of two Fixed numbers."""
